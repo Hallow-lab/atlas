@@ -1,2 +1,3 @@
-# No extra OS packages required for the app's 2D structure images.
-# PubChem supplies 2D PNGs; RDKit computes descriptors and 3D conformers.
+libxrender1
+libxext6
+libsm6
