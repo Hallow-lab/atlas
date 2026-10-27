@@ -251,7 +251,7 @@ section[data-testid="stSidebar"] * {
 div[data-testid="stMetric"] {background:#f8fafc;border:1px solid #e8edf4;padding:12px;border-radius:12px;}
 </style>""", unsafe_allow_html=True)
 
-st.markdown('''<div class="hero"><div class="eyebrow">CHEMISTRY · STRUCTURE · DISCOVERY</div><h1>⚛ Molecule Atlas</h1><p>Explore molecular structures, 3D geometry, canonical SMILES, and physicochemical properties in one workspace.</p></div>''', unsafe_allow_html=True)
+st.markdown('''<div class="hero"><div class="eyebrow">CHEMISTRY · STRUCTURE · DISCOVERY</div><h1>🧬 MoleculeVoyager</h1><p>Explore molecular structures, 3D geometry, canonical SMILES, and physicochemical properties in one workspace.</p></div>''', unsafe_allow_html=True)
 
 with st.sidebar:
     st.markdown("## Explore")
@@ -357,4 +357,4 @@ else:
    
 
 st.markdown("---")
-st.caption("Molecule Atlas · Educational cheminformatics tool · RDKit + PubChem PUG REST + 3Dmol.js")
+st.caption("MoleculeVoyager · Educational cheminformatics tool · RDKit + PubChem PUG REST + 3Dmol.js")
