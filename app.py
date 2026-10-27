@@ -138,6 +138,54 @@ def get_element_composition(mol):
         for element, count in sorted(counts.items())
     ]
 
+
+# Common element reference: general uses, plus a few biological/chemical roles.
+# Uses are examples, not exhaustive lists or safety guidance.
+ELEMENT_REFERENCE = {
+    "H": {"name": "Hydrogen", "family": "Nonmetal", "uses": "Ammonia production, hydrogenation, fuel cells and water chemistry.", "role": "Present in water and most organic molecules."},
+    "C": {"name": "Carbon", "family": "Nonmetal", "uses": "Organic chemicals, polymers, graphite, activated carbon and carbon fibre.", "role": "Forms the backbone of most organic molecules."},
+    "N": {"name": "Nitrogen", "family": "Nonmetal", "uses": "Fertilizers, ammonia, pharmaceuticals and inert atmospheres.", "role": "Found in amino acids, proteins, nucleic acids and many drugs."},
+    "O": {"name": "Oxygen", "family": "Nonmetal", "uses": "Medical oxygen, steelmaking, oxidation processes and water treatment.", "role": "Present in water and many functional groups."},
+    "F": {"name": "Fluorine", "family": "Halogen", "uses": "Fluoropolymers and selected medicines and specialty chemicals.", "role": "Fluorine substitution can change a molecule's stability and properties."},
+    "P": {"name": "Phosphorus", "family": "Nonmetal", "uses": "Fertilizers, detergents and specialty chemicals.", "role": "Important in ATP, DNA/RNA and phospholipids."},
+    "S": {"name": "Sulfur", "family": "Nonmetal", "uses": "Sulfuric acid, rubber vulcanization and chemical synthesis.", "role": "Found in cysteine, methionine and many medicines."},
+    "Cl": {"name": "Chlorine", "family": "Halogen", "uses": "Water disinfection, PVC manufacture and chemical synthesis.", "role": "Chloride is an important electrolyte; organochlorine compounds vary widely."},
+    "Br": {"name": "Bromine", "family": "Halogen", "uses": "Specialty chemicals, flame-retardant chemistry and synthesis.", "role": "Present in some pharmaceuticals and bioactive compounds."},
+    "I": {"name": "Iodine", "family": "Halogen", "uses": "Antiseptics, contrast agents and iodized salt.", "role": "Required for thyroid hormone synthesis in appropriate dietary amounts."},
+    "Na": {"name": "Sodium", "family": "Alkali metal", "uses": "Sodium compounds in food, glass, chemical manufacture and industry.", "role": "Sodium ions are central to nerve impulses and fluid balance."},
+    "K": {"name": "Potassium", "family": "Alkali metal", "uses": "Fertilizers, soaps and industrial chemicals.", "role": "Potassium ions are important for membrane potentials and muscle function."},
+    "Ca": {"name": "Calcium", "family": "Alkaline earth metal", "uses": "Cement, lime, supplements and materials.", "role": "Calcium ions support bones, signaling and muscle contraction."},
+    "Mg": {"name": "Magnesium", "family": "Alkaline earth metal", "uses": "Lightweight alloys, refractories and chemical reagents.", "role": "Magnesium is a cofactor in many enzymes and is central to chlorophyll."},
+    "Fe": {"name": "Iron", "family": "Transition metal", "uses": "Steel production, catalysts and magnetic materials.", "role": "Iron is used in hemoglobin and many enzymes."},
+    "Zn": {"name": "Zinc", "family": "Transition metal", "uses": "Galvanizing, brass, batteries and selected topical products.", "role": "Zinc is a cofactor in many enzymes and proteins."},
+    "Cu": {"name": "Copper", "family": "Transition metal", "uses": "Electrical wiring, plumbing, alloys and catalysts.", "role": "Copper is a cofactor in several enzymes."},
+    "Si": {"name": "Silicon", "family": "Metalloid", "uses": "Semiconductors, glass, ceramics and silicones.", "role": "Silicon compounds are widely used in materials and devices."},
+    "B": {"name": "Boron", "family": "Metalloid", "uses": "Borosilicate glass, detergents and semiconductor materials.", "role": "Boron compounds have specialized chemical and material applications."},
+    "Se": {"name": "Selenium", "family": "Nonmetal", "uses": "Glass, electronics and selected industrial applications.", "role": "Selenium is a trace nutrient in specific selenoproteins."},
+    "Li": {"name": "Lithium", "family": "Alkali metal", "uses": "Rechargeable batteries, ceramics and specialty alloys.", "role": "Lithium salts have specific medical uses under professional supervision."},
+    "Al": {"name": "Aluminium", "family": "Post-transition metal", "uses": "Transport, packaging, construction and alloys.", "role": "Aluminium compounds have applications in materials and some formulations."},
+    "Ag": {"name": "Silver", "family": "Transition metal", "uses": "Electronics, mirrors, jewellery and selected antimicrobial materials.", "role": "Silver compounds have limited specialized medical/material uses."},
+    "Au": {"name": "Gold", "family": "Transition metal", "uses": "Electronics, jewellery and specialized catalysts.", "role": "Gold compounds have some specialized research and medical applications."},
+}
+
+def element_reference(symbol):
+    """Return reference information for an element symbol."""
+    info = ELEMENT_REFERENCE.get(symbol, {})
+    try:
+        atom = Chem.Atom(symbol)
+        return {
+            "Element": symbol,
+            "Element name": info.get("name", symbol),
+            "Atomic number": atom.GetAtomicNum(),
+            "Atomic mass (approx.)": round(atom.GetMass(), 4),
+            "Chemical family": info.get("family", "See periodic table reference"),
+            "Common uses": info.get("uses", "Uses vary by element and compound; consult a chemistry reference."),
+            "Role in biology/chemistry": info.get("role", "Depends on its chemical form and context."),
+        }
+    except Exception:
+        return {"Element": symbol, "Note": "Element reference unavailable."}
+
+
 def viewer_html(molblock, style):
     # Cartoon is intended for protein/polymer backbones, not small molecules.
     styles = {
@@ -305,7 +353,42 @@ section[data-testid="stSidebar"] {
 section[data-testid="stSidebar"] * {
     color: var(--text-color, #edf4ff);
 }
-div[data-testid="stMetric"] {background:#f8fafc;border:1px solid #e8edf4;padding:12px;border-radius:12px;}
+/* Consistent high-contrast text and surfaces throughout Streamlit widgets */
+.stApp, .stApp p, .stApp label, .stApp li, .stApp span,
+.stApp div[data-testid="stMarkdownContainer"], .stApp [data-testid="stWidgetLabel"] {
+    color: #17253f;
+}
+.stApp { background: #f5f7fb; }
+div[data-testid="stMetric"] {
+    background: #ffffff;
+    border: 1px solid #dce4ef;
+    padding: 12px;
+    border-radius: 12px;
+}
+div[data-testid="stMetric"] label,
+div[data-testid="stMetric"] [data-testid="stMetricValue"],
+div[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+    color: #17253f !important;
+}
+.stTabs [data-baseweb="tab"] { color: #334155 !important; }
+.stTabs [aria-selected="true"] { color: #0f766e !important; }
+[data-testid="stDataFrame"], [data-testid="stTable"] { color: #17253f; }
+[data-testid="stAlert"] p { color: #17253f !important; }
+section[data-testid="stSidebar"] {
+    background: #101a2e !important;
+}
+section[data-testid="stSidebar"] * {
+    color: #edf4ff !important;
+}
+section[data-testid="stSidebar"] input,
+section[data-testid="stSidebar"] textarea,
+section[data-testid="stSidebar"] [data-baseweb="select"] > div {
+    color: #17253f !important;
+    background-color: #ffffff !important;
+}
+.hero, .hero * { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+.hero .eyebrow { color: #77e0d1 !important; -webkit-text-fill-color: #77e0d1 !important; }
+.hero p { color: #d7e6f7 !important; -webkit-text-fill-color: #d7e6f7 !important; }
 </style>""", unsafe_allow_html=True)
 
 st.markdown('''<div class="hero"><div class="eyebrow">CHEMISTRY · STRUCTURE · DISCOVERY</div><h1>🧬 MoleculeVoyager</h1><p>Explore molecular structures, 3D geometry, canonical SMILES, and physicochemical properties in one workspace.</p></div>''', unsafe_allow_html=True)
@@ -463,6 +546,37 @@ if record:
                 st.info("This molecule has no bonds.")
         else:
             st.info("No atoms are available for this molecule.")
+    with tabuses:
+        st.subheader("Elements, chemistry and common uses")
+        st.caption("Element uses below are general examples. An element's behaviour depends on its chemical form, concentration and context.")
+        composition = get_element_composition(mol)
+        if composition:
+            selected_symbol = st.selectbox(
+                "Choose an element present in this molecule",
+                [item["Element"] for item in composition],
+                key="element_uses_selection"
+            )
+            info = element_reference(selected_symbol)
+            st.markdown(f"### {info['Element name']} ({selected_symbol})")
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Atomic number", info.get("Atomic number", "—"))
+            c2.metric("Approx. atomic mass", info.get("Atomic mass (approx.)", "—"))
+            c3.metric("Atoms in molecule", next(x["Atom count"] for x in composition if x["Element"] == selected_symbol))
+            st.write(f"**Chemical family:** {info.get('Chemical family', '—')}")
+            st.write(f"**Common uses:** {info.get('Common uses', '—')}")
+            st.write(f"**Biological/chemical role:** {info.get('Role in biology/chemistry', '—')}")
+            st.markdown("#### Composition of this molecule")
+            st.dataframe(composition, use_container_width=True, hide_index=True)
+            st.info("The element reference describes general uses of the element or its compounds; it does not mean the whole molecule has those same uses.")
+            import pandas as pd
+            st.download_button(
+                "Download element composition CSV",
+                data=pd.DataFrame(composition).to_csv(index=False),
+                file_name="element_composition.csv", mime="text/csv"
+            )
+        else:
+            st.info("No element composition is available for this molecule.")
+
     with tabsmiles:
         st.markdown("#### Canonical isomeric SMILES")
         st.markdown(f'<div class="smiles">{record["smiles"]}</div>', unsafe_allow_html=True)
