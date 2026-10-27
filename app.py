@@ -87,45 +87,56 @@ def get_properties(mol):
     }
 
 def viewer_html(molblock, style):
-    # Style definitions use 3Dmol.js representations. Cartoon is not applicable to ordinary small molecules.
+    # Cartoon is intended for protein/polymer backbones, not small molecules.
     styles = {
-        "Ball and Stick": "{stick:{radius:0.16}, sphere:{scale:0.27}}",
-        "Space Filling": "{sphere:{scale:0.85}}",
-        "Wedge and Dash": "{stick:{radius:0.12}, sphere:{scale:0.22}}",
-        "Stick": "{stick:{radius:0.20}}",
-        "Wireframe": "{line:{linewidth:2}}",
+        "Ball and Stick": {"stick": {"radius": 0.16}, "sphere": {"scale": 0.27}},
+        "Space Filling": {"sphere": {"scale": 0.85}},
+        "Wedge and Dash": {"stick": {"radius": 0.12}, "sphere": {"scale": 0.22}},
+        "Stick": {"stick": {"radius": 0.20}},
+        "Wireframe": {"line": {"linewidth": 2}},
     }
+
+    import html
+
     sty = styles.get(style, styles["Ball and Stick"])
-    # JSON encoding keeps molblock safely quoted inside JavaScript.
     block_json = json.dumps(molblock)
-    return f'''<div id="molecule-viewer" style="height:480px;width:100%;background:#0b1220;border-radius:16px;overflow:hidden"></div>
-<div style="font:12px sans-serif;color:var(--text-color, #64748b);padding:6px 2px">Drag to rotate · Scroll to zoom · 3D coordinates are computationally generated</div>
+    style_json = json.dumps(sty)
+
+    return f"""
+<div id="molecule-viewer"
+     style="height:480px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;">
+</div>
+<div style="font:12px sans-serif;color:#64748b;padding:6px 2px;">
+    Drag to rotate · Scroll to zoom · 3D coordinates are computationally generated
+</div>
+
 <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
 <script>
-(function(){{
- const el=document.getElementById('molecule-viewer');
- if (!window.$3Dmol) {
-    el.innerHTML = `
-        <div style="
-            padding: 24px;
-            color: var(--text-color, #334155);
-            background: var(--background-color, #ffffff);
-            font-family: sans-serif;
-        ">
-            3D viewer could not load. Check your internet connection and reload.
-        </div>`;
-    return;
-}
-const isDark = window.matchMedia &&
-    window.matchMedia('(prefers-color-scheme: dark)').matches;
+(function() {{
+    const el = document.getElementById("molecule-viewer");
 
-const viewer = $3Dmol.createViewer(el, {backgroundColor: isDark ? '#0b1220' : '#ffffff',antialias: true});
- viewer.addModel({block_json},'mol');
- viewer.setStyle({{}},{sty});
- viewer.zoomTo(); viewer.render();
- window.addEventListener('resize',()=>viewer.resize());
+    if (!window.$3Dmol) {{
+        el.innerHTML = '<div style="padding:24px;color:#334155;background:#ffffff;font-family:sans-serif;">3D viewer could not load. Check your internet connection and reload.</div>';
+        return;
+    }}
+
+    const isDark = window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+
+    const viewer = window.$3Dmol.createViewer(el, {{
+        backgroundColor: isDark ? "#0b1220" : "#ffffff",
+        antialias: true
+    }});
+
+    viewer.addModel({block_json}, "mol");
+    viewer.setStyle({{}}, {style_json});
+    viewer.zoomTo();
+    viewer.render();
+
+    window.addEventListener("resize", () => viewer.resize());
 }})();
-</script>'''
+</script>
+"""
 
 def resolve_record(label, source, typed):
     if source == "SMILES":
