@@ -5,7 +5,7 @@ import streamlit.components.v1 as components
 from rdkit import Chem
 from rdkit.Chem import AllChem, Descriptors, rdMolDescriptors, Lipinski, Crippen
 
-st.set_page_config(page_title="Molecule Atlas", page_icon="⚛️", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="MoleculeVoyager", page_icon="🧬", layout="wide", initial_sidebar_state="expanded")
 
 # Molecules reflected in the supplied chemistry reports, plus useful starter examples.
 STARTER_MOLECULES = [
@@ -99,13 +99,27 @@ def viewer_html(molblock, style):
     # JSON encoding keeps molblock safely quoted inside JavaScript.
     block_json = json.dumps(molblock)
     return f'''<div id="molecule-viewer" style="height:480px;width:100%;background:#0b1220;border-radius:16px;overflow:hidden"></div>
-<div style="font:12px sans-serif;color:#64748b;padding:6px 2px">Drag to rotate · Scroll to zoom · 3D coordinates are computationally generated</div>
+<div style="font:12px sans-serif;color:var(--text-color, #64748b);padding:6px 2px">Drag to rotate · Scroll to zoom · 3D coordinates are computationally generated</div>
 <script src="https://3Dmol.org/build/3Dmol-min.js"></script>
 <script>
 (function(){{
  const el=document.getElementById('molecule-viewer');
- if(!window.$3Dmol){{el.innerHTML='<div style="padding:24px;color:#fff">3D viewer could not load. Check your internet connection and reload.</div>';return;}}
- const viewer=$3Dmol.createViewer(el,{{backgroundColor:'#0b1220', antialias:true}});
+ if (!window.$3Dmol) {
+    el.innerHTML = `
+        <div style="
+            padding: 24px;
+            color: var(--text-color, #334155);
+            background: var(--background-color, #ffffff);
+            font-family: sans-serif;
+        ">
+            3D viewer could not load. Check your internet connection and reload.
+        </div>`;
+    return;
+}
+const isDark = window.matchMedia &&
+    window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+const viewer = $3Dmol.createViewer(el, {backgroundColor: isDark ? '#0b1220' : '#ffffff',antialias: true});
  viewer.addModel({block_json},'mol');
  viewer.setStyle({{}},{sty});
  viewer.zoomTo(); viewer.render();
@@ -134,16 +148,95 @@ st.markdown("""<style>
 html, body, [class*="css"] {font-family:'DM Sans',sans-serif;}
 .stApp {background:linear-gradient(180deg,#f6f8fc 0%,#ffffff 38%);}
 .block-container {max-width:1450px;padding-top:1.7rem;padding-bottom:3rem;}
-.hero {padding:26px 30px;border-radius:22px;background:linear-gradient(120deg,#111b35 0%,#203e69 62%,#2b7b84 100%);color:white;margin-bottom:22px;}
-.hero h1 {font-family:'Space Grotesk',sans-serif;font-size:2.45rem;letter-spacing:-1.4px;margin:0 0 7px 0;color:white;}
-.hero p {color:#d7e6f7;margin:0;font-size:1rem;}
-.eyebrow {font-size:.72rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#77e0d1;margin-bottom:10px;}
-.panel {background:white;border:1px solid #e5eaf2;border-radius:18px;padding:18px 20px;box-shadow:0 8px 28px rgba(28,47,79,.045);}
-.small-label {font-size:.72rem;letter-spacing:1px;text-transform:uppercase;color:#718096;font-weight:700;}
-.big-value {font-family:'Space Grotesk',sans-serif;font-size:1.55rem;color:#17253f;font-weight:700;}
-.smiles {font-family:ui-monospace,SFMono-Regular,Consolas,monospace;background:#f3f6fb;padding:13px;border-radius:10px;overflow-wrap:anywhere;color:#233e63;}
-section[data-testid="stSidebar"] {background:#101a2e;}
-section[data-testid="stSidebar"] * {color:#edf4ff;}
+.hero {
+    padding: 26px 30px;
+    border-radius: 22px;
+    background: linear-gradient(
+        120deg,
+        #111b35 0%,
+        #203e69 62%,
+        #2b7b84 100%
+    );
+    color: #ffffff;
+    margin-bottom: 22px;
+}
+
+.hero h1,
+.hero h2,
+.hero p,
+.hero span,
+.hero div {
+    color: #ffffff;
+}
+.hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2.45rem;
+    letter-spacing: -1.4px;
+    margin: 0 0 7px 0;
+    color: #ffffff !important;
+    line-height: 1.2;
+    font-weight: 700;
+}
+.hero p {
+    color: #d7e6f7 !important;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.6;
+}.eyebrow {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #77e0d1;
+    margin-bottom: 10px;
+}
+
+.panel {
+    background: var(--secondary-background-color, #ffffff);
+    color: var(--text-color, #17253f);
+    border: 1px solid rgba(128, 128, 128, .25);
+    border-radius: 18px;
+    padding: 18px 20px;
+    box-shadow: 0 8px 28px rgba(28, 47, 79, .08);
+}
+
+.panel * {
+    color: inherit;
+}
+
+.small-label {
+    font-size: .72rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-color, #718096);
+    opacity: .75;
+    font-weight: 700;
+}
+
+.big-value {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.55rem;
+    color: var(--text-color, #17253f);
+    font-weight: 700;
+}
+
+.smiles {
+    font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+    background: var(--secondary-background-color, #f3f6fb);
+    padding: 13px;
+    border-radius: 10px;
+    overflow-wrap: anywhere;
+    color: var(--text-color, #233e63);
+    border: 1px solid rgba(128, 128, 128, .2);
+}
+
+section[data-testid="stSidebar"] {
+    background: var(--secondary-background-color, #101a2e);
+}
+
+section[data-testid="stSidebar"] * {
+    color: var(--text-color, #edf4ff);
+}
 div[data-testid="stMetric"] {background:#f8fafc;border:1px solid #e8edf4;padding:12px;border-radius:12px;}
 </style>""", unsafe_allow_html=True)
 
