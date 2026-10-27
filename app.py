@@ -1,76 +1,3 @@
-</style>""", unsafe_allow_html=True)
-
-st.markdown('''<div class="hero"><div class="eyebrow">CHEMISTRY · STRUCTURE · DISCOVERY</div><h1>🧬 MoleculeVoyager</h1><p>Explore molecular structures, 3D geometry, canonical SMILES, and physicochemical properties in one workspace.</p></div>''', unsafe_allow_html=True)
-
-with st.sidebar:
-    st.markdown("## Explore")
-    source = st.radio("Molecule source", ["Starter library", "PubChem name search", "SMILES"], index=0)
-    if source == "Starter library":
-        categories = sorted(set(x["category"] for x in STARTER_MOLECULES))
-        category = st.selectbox("Collection", ["All collections"] + categories)
-        choices = [x for x in STARTER_MOLECULES if category == "All collections" or x["category"] == category]
-        search = st.text_input("Filter library", placeholder="e.g. aspirin, caffeine")
-        if search.strip(): choices = [x for x in choices if search.lower() in x["name"].lower() or search.lower() in x["smiles"].lower()]
-        selected_name = st.selectbox("Open molecule", [x["name"] for x in choices]) if choices else None
-        typed = selected_name or ""
-    elif source == "PubChem name search":
-        typed = st.text_input("Compound name", value="aspirin", placeholder="e.g. caffeine")
-        selected_name = typed
-    else:
-        typed = st.text_area("SMILES string", value="CCO", height=100, help="SMILES is parsed locally by RDKit.")
-        selected_name = "User-entered molecule"
-    st.markdown("---")
-    style = st.selectbox("3D representation", ["Ball and Stick", "Space Filling", "Wedge and Dash", "Stick", "Wireframe", "Cartoon"])
-    include_h = st.checkbox("Include hydrogens in 3D", value=True)
-    open_button = st.button("Open molecule", type="primary", use_container_width=True)
-    st.caption("PubChem name search and 2D images require internet access. The starter library works without name lookup.")
-
-if "atlas_record" not in st.session_state:
-    st.session_state.atlas_record = None
-if open_button:
-    try:
-        with st.spinner("Loading structure and calculating properties…"):
-            record = resolve_record(selected_name, source, typed)
-            record["molblock"] = make_3d_block(record["mol"], include_h)
-            st.session_state.atlas_record = record
-            st.session_state.atlas_source = source
-            st.session_state.atlas_error = None
-    except Exception as exc:
-        st.session_state.atlas_error = str(exc)
-if st.session_state.get("atlas_error"):
-    st.error(st.session_state.atlas_error)
-
-record = st.session_state.atlas_record
-if record:
-    mol = record["mol"]
-    props = get_properties(mol)
-    st.markdown(f"### {record['name']}")
-    st.caption("Molecule detail page · Select a different entry in the sidebar and choose Open molecule to switch compounds.")
-    metric_cols = st.columns(4)
-    for col, (label, value) in zip(metric_cols, [("FORMULA",props["Molecular formula"]),("MOLECULAR WEIGHT",f"{props['Molecular weight (g/mol)']:.3f} g/mol"),("HEAVY ATOMS",str(props["Heavy atoms"])),("RINGS",str(props["Ring count"]))]):
-        with col:
-            st.markdown(f'<div class="panel"><div class="small-label">{label}</div><div class="big-value">{value}</div></div>', unsafe_allow_html=True)
-    st.write("")
-    tab2d, tab3d, tabprops, tabsmiles = st.tabs(["◫  2D Structure", "◉  3D View", "▤  Properties", "⌘  SMILES & Export"])
-    with tab2d:
-        left, right = st.columns([1.2,1])
-        with left:
-            st.markdown('<div class="panel">', unsafe_allow_html=True)
-            st.markdown("#### 2D molecular structure")
-            try:
-                png = pubchem_image(record["smiles"])
-                st.image(png, use_container_width=True)
-            except Exception:
-                st.info("PubChem 2D image is unavailable. The molecule can still be explored in 3D and its properties remain available.")
-            st.markdown('</div>', unsafe_allow_html=True)
-        with right:
-            st.markdown('<div class="panel">', unsafe_allow_html=True)
-            st.markdown("#### At a glance")
-            st.write(f"**Molecular formula:** {props['Molecular formula']}")
-            st.write(f"**Formal charge:** {props['Formal charge']}")
-            st.write(f"**Hydrogen-bond donors:** {props['H-bond donors']}")
-            st.write(f"**Hydrogen-bond acceptors:** {props['H-bond acceptors']}")
-            st.write(f"**Rotatable bonds:** {props['Rotatable bonds']}")
             st.caption("Physicochemical descriptors are computed from the parsed structure using RDKit.")
             st.markdown('</div>', unsafe_allow_html=True)
     with tab3d:
@@ -88,6 +15,70 @@ if record:
         st.write("- **cLogP** estimates lipophilicity; it is not a measured partition coefficient.")
         st.write("- **TPSA** estimates topological polar surface area and can support early permeability comparisons.")
         st.write("- Hydrogen-bond donor/acceptor counts and rotatable bonds are structural descriptors, not direct clinical outcomes.")
+    with tabatoms:
+        st.subheader("Individual Atom Explorer")
+        st.caption("Inspect atom-level properties and connected bonds. Atom indices start at 0.")
+        atom_data = get_atom_data(mol)
+        bond_data = get_bond_data(mol)
+        element_data = get_element_composition(mol)
+
+        if atom_data:
+            atom_labels = [
+                f"Atom {a['Atom index']} — {a['Element']} (Z={a['Atomic number']})"
+                for a in atom_data
+            ]
+            selected_label = st.selectbox(
+                "Select an individual atom", atom_labels,
+                key="atom_explorer_selection"
+            )
+            selected_index = atom_labels.index(selected_label)
+            selected_atom = atom_data[selected_index]
+
+            st.markdown("#### Selected atom")
+            c1, c2, c3, c4 = st.columns(4)
+            c1.metric("Element", selected_atom["Element"])
+            c2.metric("Atomic number", selected_atom["Atomic number"])
+            c3.metric("Formal charge", selected_atom["Formal charge"])
+            c4.metric("Hybridization", selected_atom["Hybridization"])
+
+            st.markdown("#### Complete atom properties")
+            st.dataframe(
+                [{"Property": k, "Value": v} for k, v in selected_atom.items()],
+                use_container_width=True, hide_index=True
+            )
+
+            connected_bonds = [
+                b for b in bond_data
+                if b["Atom 1"] == selected_index or b["Atom 2"] == selected_index
+            ]
+            st.markdown("#### Bonds connected to selected atom")
+            if connected_bonds:
+                st.dataframe(connected_bonds, use_container_width=True, hide_index=True)
+            else:
+                st.info("This atom has no bonds.")
+
+            st.markdown("#### Element composition")
+            st.dataframe(element_data, use_container_width=True, hide_index=True)
+            st.markdown("#### All atoms")
+            st.dataframe(atom_data, use_container_width=True, hide_index=True)
+            import pandas as pd
+            st.download_button(
+                "Download atom properties CSV",
+                data=pd.DataFrame(atom_data).to_csv(index=False),
+                file_name="atom_properties.csv", mime="text/csv"
+            )
+            st.markdown("#### All bonds")
+            if bond_data:
+                st.dataframe(bond_data, use_container_width=True, hide_index=True)
+                st.download_button(
+                    "Download bond properties CSV",
+                    data=pd.DataFrame(bond_data).to_csv(index=False),
+                    file_name="bond_properties.csv", mime="text/csv"
+                )
+            else:
+                st.info("This molecule has no bonds.")
+        else:
+            st.info("No atoms are available for this molecule.")
     with tabsmiles:
         st.markdown("#### Canonical isomeric SMILES")
         st.markdown(f'<div class="smiles">{record["smiles"]}</div>', unsafe_allow_html=True)
