@@ -394,6 +394,7 @@ section[data-testid="stSidebar"] [data-baseweb="select"] > div {
 st.markdown('''<div class="hero"><div class="eyebrow">CHEMISTRY · STRUCTURE · DISCOVERY</div><h1>🧬 MoleculeVoyager</h1><p>Explore molecular structures, 3D geometry, canonical SMILES, and physicochemical properties in one workspace.</p></div>''', unsafe_allow_html=True)
 
 with st.sidebar:
+    page = st.radio("Navigation", ["Molecule Explorer", "About"], index=0, key="main_navigation")
     st.markdown("## Explore")
     source = st.radio("Molecule source", ["Starter library", "PubChem name search", "SMILES"], index=0)
     if source == "Starter library":
@@ -415,6 +416,31 @@ with st.sidebar:
     include_h = st.checkbox("Include hydrogens in 3D", value=True)
     open_button = st.button("Open molecule", type="primary", use_container_width=True)
     st.caption("PubChem name search and 2D images require internet access. The starter library works without name lookup.")
+
+if page == "About":
+    st.markdown("""
+    <div class="panel">
+      <div class="small-label">ABOUT THE PROJECT</div>
+      <h1>🧬 About MoleculeVoyager</h1>
+      <p>MoleculeVoyager is an educational cheminformatics explorer for discovering molecular structures, viewing 2D and interactive 3D representations, and examining molecular and atom-level properties.</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.write("")
+    left, right = st.columns(2)
+    with left:
+        st.markdown("### 👨‍💻 Created by")
+        st.markdown("**Nithin Baalaaji**")
+        st.markdown("### 🧰 Created with")
+        st.markdown("- **Python** — application language\n- **Streamlit** — interactive web app interface\n- **RDKit** — molecular parsing, structure handling and chemical descriptors\n- **PubChem PUG REST API** — compound lookup and molecular information\n- **3Dmol.js** — interactive 3D molecular visualization")
+    with right:
+        st.markdown("### ✉️ Support")
+        st.write("Questions, feedback, or bug reports are welcome.")
+        st.markdown("**Email:** [nithinstudent12@gmail.com](mailto:nithinstudent12@gmail.com)")
+        st.markdown("### 🎓 Purpose")
+        st.write("Built as an educational tool to make molecular structures and chemical properties easier to explore. It is intended for learning and research support, not as a substitute for validated scientific or clinical advice.")
+    st.markdown("---")
+    st.caption("MoleculeVoyager · Created by Nithin Baalaaji")
+    st.stop()
 
 if "atlas_record" not in st.session_state:
     st.session_state.atlas_record = None
@@ -442,9 +468,9 @@ if record:
         with col:
             st.markdown(f'<div class="panel"><div class="small-label">{label}</div><div class="big-value">{value}</div></div>', unsafe_allow_html=True)
     st.write("")
-    tab2d, tab3d, tabprops, tabatoms, tabsmiles = st.tabs([
+    tab2d, tab3d, tabprops, tabatoms, tabuses, tabsmiles = st.tabs([
         "◫  2D Structure", "◉  3D View", "▤  Properties",
-        "⚛  Atom Explorer", "⌘  SMILES & Export"
+        "⚛  Atom Explorer", "🧪 Elements & Uses", "⌘  SMILES & Export"
     ])
     with tab2d:
         left, right = st.columns([1.2,1])
