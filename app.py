@@ -250,7 +250,7 @@ else:
         st.markdown('<div class="panel"><div class="small-label">02 · Visualize</div><h3>Compare structures</h3><p>Switch between 2D connectivity and interactive 3D representations.</p></div>', unsafe_allow_html=True)
     with c:
         st.markdown('<div class="panel"><div class="small-label">03 · Analyze</div><h3>Inspect properties</h3><p>Review molecular descriptors and export structure or property data.</p></div>', unsafe_allow_html=True)
-    st.info("The reference PDF contains example reports for aspirin, acetic acid, and ethanol; these are included in the starter library. No finite app can preload every known molecule, so PubChem search provides access to a much broader compound collection, subject to its availability and internet access.")
+   
 
 st.markdown("---")
 st.caption("Molecule Atlas · Educational cheminformatics tool · RDKit + PubChem PUG REST + 3Dmol.js")
